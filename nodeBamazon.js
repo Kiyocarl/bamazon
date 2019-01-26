@@ -1,5 +1,5 @@
 // require depedencies
-const inqirer = require("inquirer");
+const inquirer = require("inquirer");
 const mysql = require("mysql");
 
 //set up database connection
@@ -7,7 +7,7 @@ const db = mysql.createConnection({
 host: "localhost",
 port: 3306,
 user: "root",
-password: "",
+password: "password",
 database: "bamazon_db"
 });
 
@@ -24,28 +24,27 @@ db.connect(err =>{
 const startPrompt = () =>{
   inquirer.prompt([
     {
-      item: "idNumber",
-      product: "productName",
-      department: "departmentName",
-      price: 0,
-      quanity: 0,
-      message: "what is the item number?",
-      message: "how many do you want?",
+      name: "action",
+      type: "list",
+      message: "pic an action",
       choices: ["Post an item", 'Post on an product']
     }
   ]).then(userResponse =>{
-    if(userReponse.idNumber === "productName"){
+    console.log(userResponse)
+    if(userResponse.action === "post an item"){
       postItem();
     }
     else{
       postProduct();
     }
+  }).catch(err => {
+    console.log(err)
   });  
 }
 //post item function
 const postItem =() =>{
 
-  inqirer.prompt([
+  inquirer.prompt([
     {
       name: "itemId",
       message: "right id number",
@@ -95,25 +94,27 @@ const postItem =() =>{
     
   ]).then(userResponse =>{
 
-    db.query("INERT INTO products SET ?",{
+    db.query("INSERT INTO products SET ?",{
       item_id: userReponse.item_id,
       product_name: userResponse.productName,
       department_name: userResponse.departmentName,
       price: userResponse.itemPrice,
       stock_quanity: userResponse.stockQuanity,
-    },(err, dbReponse)=>{
+    },(err, userReponse )=>{
       if(err) throw err;
       console.log(`$(dbResponse.affectedRows) item added;`);
       startPrompt();
     });
 
+  }).catch(err => {
+    console.log(err)
   });
 }
 
  //post users products
 const postProduct = () =>{
 
-  db.query("SELECT * FROM product",(err, productItem)=>{
+  db.query("SELECT * FROM products",(err, productItem)=>{
 
     if(err) throw err;
 
@@ -122,12 +123,17 @@ const postProduct = () =>{
         name: "itemName",
         message: "What item do you want to bid on?",
         type: "list",
-        choices: auctionItems.map(item => item.item_name)
+        choices: productItem.map(item => item.item_name)
         
       },
 
      
-    ])
+    ]).then(res => {
+      console.log(res)
+    }).catch(err => {
+      console.log("ERROR!!!!!")
+      console.log(err)
+    })
 
   })
 }
